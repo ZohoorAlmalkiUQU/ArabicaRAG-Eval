@@ -1,6 +1,0 @@
-Model column: predicted_answer_mistral
-Subset: Answerable only
-MRR@10 (proxy): 0.4000
-nDCG@10 (proxy): 0.4000
-ROUGE-L: 0.0000
-BLEU-4: 0.0000
