@@ -1,6 +1,6 @@
 Arabica QA RAG Evaluation – Final Results
 ============================================================
-Date : 2026-01-25 05:18
+Date : 2026-01-30 03:56
 Questions (total) : 1,000
 Answerable        : 500
 Unanswerable      : 500
