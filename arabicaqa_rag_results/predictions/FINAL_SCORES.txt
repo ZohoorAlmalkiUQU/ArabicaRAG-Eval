@@ -1,6 +1,6 @@
 Arabica QA RAG Evaluation – Final Results
 ============================================================
-Date : 2026-01-30 03:56
+Date : 2026-01-31 03:44
 Questions (total) : 1,000
 Answerable        : 500
 Unanswerable      : 500
@@ -14,5 +14,5 @@ Winner: Mistral-7B-Instruct (+2.80 pts on EM25)
 
 BREAKDOWN
 ------------------------------------------------------------
-llama3:latest → Ans EM:   4.20% | Ans EM25:   4.20% | No-Ans Acc:  27.20%
-Mistral-7B-Instruct → Ans EM:   1.20% | Ans EM25:   1.20% | No-Ans Acc:  31.60%
+llama3:latest → Ans EM:   4.20% | Ans EM25:   4.20% | No-Ans: 136/500 | No-Ans Acc:  27.20%
+Mistral-7B-Instruct → Ans EM:   1.20% | Ans EM25:   1.20% | No-Ans: 158/500 | No-Ans Acc:  31.60%
