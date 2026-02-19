@@ -26,7 +26,6 @@ Evaluation includes classic QA metrics, retrieval ranking metrics, and **RAGAS**
     ├── dataset
     ├── predictions
     └── ragas_full
-        ├── .ipynb_checkpoints
         ├── figures
         ├── figures_extra
         └── figures_full
