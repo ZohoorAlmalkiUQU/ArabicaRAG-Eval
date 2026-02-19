@@ -34,18 +34,16 @@ __pycache__/
 # =====================
 # Datasets / large files
 # =====================
-data/
-datasets/
-*.parquet
-*.csv
-*.jsonl
-*.pkl
+# arabicaqa_rag_results/dataset/
+# arabicaqa_rag_results/dataset/**/*.json
+# arabicaqa_rag_results/dataset/**/*.parquet
+# arabicaqa_rag_results/dataset/**/*.csv
+# arabicaqa_rag_results/dataset/**/*.pkl
 
 # =====================
 # Notebooks
 # =====================
 .ipynb_checkpoints/
-
 # =====================
 # OS / IDE
 # =====================
