@@ -234,7 +234,7 @@ If you use this repository, please cite:
 ```bibtex
 @article{almalki_arabicrag_2026,
   title={A Comparative Study of LLM-Based Retrieval-Augmented Generation for Arabic Question Answering},
-  author={Almalki, Zohoor and Alshehri, Shahad and Alrehaili, Shatha and Althagafi, Amjad and Mars, Mourad},
+  author={Zohoor Almalki,Shahad Alshehri, Shatha Alrehaili, Amjad Althagafi, and Mourad Mars},
   year={2026}
 }
 ```
@@ -280,7 +280,7 @@ During the final execution phase, the internet connection was interrupted, which
 
 ## Acknowledgments
 
-This research was supported by **Umm Al-Qura University** (Grant Number: **26UQU4350491GSSR03**).
+This research was supported by **Umm Al-Qura University** (Grant Number: **26UQU44680217GSSR02**).
 
 ---
 
