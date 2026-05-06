@@ -1,0 +1,17 @@
+# RAGAS Summary Means
+
+Judge LLM: `gemma2:2b` via Ollama  
+Embeddings: `intfloat/multilingual-e5-large`  
+Prediction file: `arabicaqa_rag_results/predictions/comparison_llama_mistral_qwen_1000.csv`  
+
+| model   | subset       |   n_questions |   generation_latency_mean_sec |   generation_latency_median_sec |   generation_latency_p95_sec |   ragas_avg_latency_sec_per_question |   answer_relevancy |   faithfulness |   context_recall |   context_precision |   answer_correctness |   answer_similarity |
+|:--------|:-------------|--------------:|------------------------------:|--------------------------------:|-----------------------------:|-------------------------------------:|-------------------:|---------------:|-----------------:|--------------------:|---------------------:|--------------------:|
+| qwen    | ALL          |             2 |                      125.91   |                        125.91   |                     162.778  |                              607.493 |             0      |           1    |                0 |                   0 |               0.4116 |              0.8963 |
+| llama   | ALL          |             2 |                      138.965  |                        138.965  |                     180.422  |                              568.812 |             0      |           1    |                0 |                   0 |               0.4116 |              0.8963 |
+| mistral | ALL          |             2 |                      366.345  |                        366.345  |                     477.619  |                              579.225 |             0.7772 |           0.75 |                0 |                   0 |               0.3915 |              0.816  |
+| qwen    | ANSWERABLE   |             1 |                      166.875  |                        166.875  |                     166.875  |                              607.493 |             0      |           1    |                0 |                   0 |               0.576  |              0.8039 |
+| llama   | ANSWERABLE   |             1 |                      185.028  |                        185.028  |                     185.028  |                              568.812 |             0      |           1    |                0 |                   0 |               0.576  |              0.8039 |
+| mistral | ANSWERABLE   |             1 |                      489.983  |                        489.983  |                     489.983  |                              579.225 |             0.6978 |           1    |                0 |                   0 |               0.5941 |              0.8764 |
+| qwen    | UNANSWERABLE |             1 |                       84.9459 |                         84.9459 |                      84.9459 |                              607.493 |             0      |           1    |                0 |                   0 |               0.2472 |              0.9887 |
+| llama   | UNANSWERABLE |             1 |                       92.9021 |                         92.9021 |                      92.9021 |                              568.812 |             0      |           1    |                0 |                   0 |               0.2472 |              0.9887 |
+| mistral | UNANSWERABLE |             1 |                      242.707  |                        242.707  |                     242.707  |                              579.225 |             0.8566 |           0.5  |                0 |                   0 |               0.1889 |              0.7557 |

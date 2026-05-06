@@ -1,6 +1,6 @@
 ArabicaQA RAG Evaluation – Final QA Results
 ================================================================================
-Date: 2026-05-05 08:03
+Date: 2026-05-06 05:12
 Results file: arabicaqa_rag_results/predictions\comparison_llama_mistral_qwen_1000.csv
 Total questions: 2
 Answerable: 1
@@ -8,8 +8,8 @@ Unanswerable: 1
 No-answer label: غير موجود في السياق
 
   model  overall_em  overall_em25  answerable_em  answerable_em25  unanswerable_no_answer_count  unanswerable_total  unanswerable_abstention_accuracy  errors  latency_mean_sec  latency_median_sec  latency_p95_sec  latency_std_sec
-  llama        50.0          50.0            0.0              0.0                             1                   1                             100.0       0          180.0415            180.0415         189.7687          15.2848
-   qwen        50.0          50.0            0.0              0.0                             1                   1                             100.0       0          197.0637            197.0637         215.0820          28.3130
-mistral         0.0           0.0            0.0              0.0                             0                   1                               0.0       0          484.2291            484.2291         491.1105          10.8130
+   qwen        50.0          50.0            0.0              0.0                             1                   1                             100.0       0          125.9102            125.9102         162.7781          57.9323
+  llama        50.0          50.0            0.0              0.0                             1                   1                             100.0       0          138.9653            138.9653         180.4221          65.1431
+mistral         0.0           0.0            0.0              0.0                             0                   1                               0.0       0          366.3447            366.3447         477.6191         174.8508
 
-Winner by Overall EM25: llama (50.00%)
+Winner by Overall EM25: qwen (50.00%)
