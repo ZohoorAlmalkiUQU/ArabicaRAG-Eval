@@ -1,0 +1,17 @@
+# RAGAS Summary Means
+
+Judge LLM: `gemma2:2b` via Ollama  
+Embeddings: `intfloat/multilingual-e5-large`  
+Prediction file: `arabicaqa_rag_results/predictions/comparison_llama_mistral_command_1000.csv`  
+
+| model   | subset       |   n_questions |   generation_latency_mean_sec |   generation_latency_median_sec |   generation_latency_p95_sec |   ragas_avg_latency_sec_per_question |   answer_relevancy |   faithfulness |   context_recall |   context_precision |   answer_correctness |   answer_similarity |
+|:--------|:-------------|--------------:|------------------------------:|--------------------------------:|-----------------------------:|-------------------------------------:|-------------------:|---------------:|-----------------:|--------------------:|---------------------:|--------------------:|
+| command | ALL          |             2 |                      110.427  |                        110.427  |                     139.411  |                              1155.25 |             0      |              1 |                0 |                   0 |               0.2241 |              0.8963 |
+| llama   | ALL          |             2 |                      130.12   |                        130.12   |                     164.385  |                              1146.15 |             0.3776 |              1 |                0 |                 nan |               0.2241 |              0.8963 |
+| mistral | ALL          |             2 |                      319.17   |                        319.17   |                     426.486  |                              1147.36 |             0.7747 |              0 |                0 |                 nan |               0.204  |              0.816  |
+| command | ANSWERABLE   |             1 |                      142.631  |                        142.631  |                     142.631  |                              1155.25 |             0      |            nan |                0 |                 nan |               0.201  |              0.8039 |
+| llama   | ANSWERABLE   |             1 |                      168.192  |                        168.192  |                     168.192  |                              1146.15 |             0      |            nan |                0 |                 nan |               0.201  |              0.8039 |
+| mistral | ANSWERABLE   |             1 |                      438.41   |                        438.41   |                     438.41   |                              1147.36 |             0.7054 |            nan |                0 |                 nan |               0.2191 |              0.8764 |
+| command | UNANSWERABLE |             1 |                       78.2225 |                         78.2225 |                      78.2225 |                              1155.25 |             0      |              1 |                0 |                   0 |               0.2472 |              0.9887 |
+| llama   | UNANSWERABLE |             1 |                       92.0483 |                         92.0483 |                      92.0483 |                              1146.15 |             0.7551 |              1 |                0 |                 nan |               0.2472 |              0.9887 |
+| mistral | UNANSWERABLE |             1 |                      199.929  |                        199.929  |                     199.929  |                              1147.36 |             0.8439 |              0 |                0 |                 nan |               0.1889 |              0.7557 |

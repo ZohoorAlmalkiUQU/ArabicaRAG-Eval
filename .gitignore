@@ -61,4 +61,5 @@ Thumbs.db
 # env
 # =====================
 .venv
-
+/arabic-ner-env/
+NLP.code-workspace
