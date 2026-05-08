@@ -1,6 +1,6 @@
 ArabicaQA RAG Evaluation – Final QA Results
 ================================================================================
-Date: 2026-05-07 02:54
+Date: 2026-05-08 06:26
 Results file: arabicaqa_rag_results/predictions\comparison_llama_mistral_command_1000.csv
 Total questions: 2
 Answerable: 1
@@ -8,8 +8,8 @@ Unanswerable: 1
 No-answer label: غير موجود في السياق
 
   model  overall_em  overall_em25  answerable_em  answerable_em25  unanswerable_no_answer_count  unanswerable_total  unanswerable_abstention_accuracy  errors  latency_mean_sec  latency_median_sec  latency_p95_sec  latency_std_sec
-command        50.0          50.0            0.0              0.0                             1                   1                             100.0       0          110.4268            110.4268         139.4107          45.5438
-  llama        50.0          50.0            0.0              0.0                             1                   1                             100.0       0          130.1204            130.1204         164.3853          53.8420
-mistral         0.0           0.0            0.0              0.0                             0                   1                               0.0       0          319.1697            319.1697         426.4862         168.6316
+command        50.0          50.0            0.0              0.0                             1                   1                             100.0       0            2.6829              2.6829           3.3171           0.9965
+  llama         0.0           0.0            0.0              0.0                             1                   1                             100.0       0            1.9605              1.9605           2.2038           0.3823
+mistral         0.0           0.0            0.0              0.0                             0                   1                               0.0       0            5.9581              5.9581           6.4924           0.8395
 
 Winner by Overall EM25: command (50.00%)
