@@ -63,3 +63,8 @@ Thumbs.db
 .venv
 /arabic-ner-env/
 NLP.code-workspace
+
+# =====================
+# archive
+# =====================
+.archive/
