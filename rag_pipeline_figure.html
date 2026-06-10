@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#ffffff;font-family:'DM Sans',sans-serif;color:#1a1a1a}
+
+.wrap{padding:24px 16px 32px;max-width:900px;margin:0 auto;background:#ffffff}
+
+.section-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:8px;padding-left:4px}
+
+.row{display:flex;gap:10px;align-items:stretch;margin-bottom:6px}
+.row.center{justify-content:center}
+.col{display:flex;flex-direction:column;gap:6px}
+
+/* Stage boxes */
+.box{border-radius:10px;padding:10px 14px;border:1.5px solid;position:relative;flex:1}
+.box .title{font-size:13px;font-weight:600;line-height:1.3;color:#111}
+.box .sub{font-size:11px;line-height:1.5;margin-top:4px;color:#333}
+.box .badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:6px}
+
+/* TEAL — Phase 1 */
+.teal{background:#d0f5ea;border-color:#0F6E56}
+.teal .title{color:#04342C}
+.teal .sub{color:#085041}
+.teal .badge{background:#0F6E56;color:#ffffff}
+
+/* BLUE — query */
+.blue{background:#daeeff;border-color:#185FA5}
+.blue .title{color:#042C53}
+.blue .sub{color:#0C447C}
+.blue .badge{background:#185FA5;color:#ffffff}
+
+/* PURPLE — prompt + models */
+.purple{background:#dddcfc;border-color:#3C3489}
+.purple .title{color:#26215C}
+.purple .sub{color:#3C3489}
+.purple .badge{background:#3C3489;color:#ffffff}
+
+/* CORAL — Mistral */
+.coral{background:#fdd9cc;border-color:#993C1D}
+.coral .title{color:#4A1B0C}
+.coral .sub{color:#712B13}
+.coral .badge{background:#993C1D;color:#ffffff}
+
+/* AMBER — eval */
+.amber{background:#fdecc8;border-color:#854F0B}
+.amber .title{color:#412402}
+.amber .sub{color:#633806}
+.amber .badge{background:#854F0B;color:#ffffff}
+
+/* GREEN — RAGAS + significance */
+.green{background:#d4edba;border-color:#3B6D11}
+.green .title{color:#173404}
+.green .sub{color:#27500A}
+.green .badge{background:#3B6D11;color:#ffffff}
+
+/* GRAY — neutral */
+.gray{background:#e8e7e0;border-color:#5F5E5A}
+.gray .title{color:#2C2C2A}
+.gray .sub{color:#444441}
+.gray .badge{background:#5F5E5A;color:#ffffff}
+
+/* Arrows */
+.arrow-v{display:flex;justify-content:center;align-items:center;height:22px;color:#555;font-size:20px;line-height:1;font-weight:600}
+.arrow-h{display:flex;align-items:center;justify-content:center;width:20px;flex-shrink:0;color:#555;font-size:18px;font-weight:600}
+
+/* Model row */
+.model-row{display:flex;gap:8px;align-items:stretch;margin-bottom:6px}
+.model-box{flex:1;border-radius:10px;padding:10px 10px;border:1.5px solid;text-align:center}
+.model-box .m-name{font-size:12px;font-weight:600;line-height:1.3}
+.model-box .m-sub{font-size:10px;margin-top:3px}
+
+.model-box.blue{background:#daeeff;border-color:#185FA5}
+.model-box.blue .m-name{color:#042C53}
+.model-box.blue .m-sub{color:#0C447C}
+
+.model-box.purple{background:#dddcfc;border-color:#3C3489}
+.model-box.purple .m-name{color:#26215C}
+.model-box.purple .m-sub{color:#3C3489}
+
+.model-box.coral{background:#fdd9cc;border-color:#993C1D}
+.model-box.coral .m-name{color:#4A1B0C}
+.model-box.coral .m-sub{color:#712B13}
+
+/* Eval grid */
+.eval-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* Phase containers */
+.phase{border-radius:12px;padding:14px 14px 12px;border:2px dashed;margin-bottom:10px}
+.phase.offline{border-color:#0F6E56;background:#f0fdf8}
+.phase.online{border-color:#3C3489;background:#f4f3ff}
+.phase.eval{border-color:#854F0B;background:#fef9f0}
+
+.phase-label{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.phase-label .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.phase-label.offline-l{color:#085041}.phase-label.offline-l .dot{background:#0F6E56}
+.phase-label.online-l{color:#26215C}.phase-label.online-l .dot{background:#3C3489}
+.phase-label.eval-l{color:#412402}.phase-label.eval-l .dot{background:#854F0B}
+
+/* Connector */
+.connector{display:flex;flex-direction:column;align-items:center;margin:2px 0 6px}
+.conn-line{width:2px;height:14px;background:#bbb}
+.conn-arrow{color:#555;font-size:16px;line-height:1;margin-top:-3px;font-weight:700}
+
+/* IO pills */
+.io-pill{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:5px 14px 5px 10px;font-size:12px;font-weight:600;border:2px solid}
+.io-row{text-align:center;margin-bottom:8px}
+.io-pill.input{background:#daeeff;border-color:#185FA5;color:#042C53}
+.io-pill.output{background:#d4edba;border-color:#3B6D11;color:#173404}
+
+.mono{font-family:'DM Mono',monospace;font-size:10px;background:rgba(0,0,0,.07);padding:1px 4px;border-radius:3px;color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- INPUT -->
+  <div class="io-row">
+    <span class="io-pill input">
+      <span style="font-size:14px">📄</span>
+      ArabicaQA MRC — 1,000 questions &nbsp;(500 answerable · 500 unanswerable)
+    </span>
+  </div>
+  <div class="arrow-v">↓</div>
+
+  <!-- PHASE 1 -->
+  <div class="phase offline">
+    <div class="phase-label offline-l"><span class="dot"></span>Phase 1 — Offline indexing</div>
+    <div class="row">
+      <div class="box teal">
+        <div class="title">Dataset preprocessing</div>
+        <div class="sub">Flatten JSON splits · fix punctuation-only answers · Arabic text normalization · balance answerable / unanswerable</div>
+        <span class="badge">random_state = 42</span>
+      </div>
+      <div class="arrow-h">→</div>
+      <div class="box teal">
+        <div class="title">Document deduplication</div>
+        <div class="sub">Remove duplicate passages by <span class="mono">document_id</span> · retain chunk metadata for traceability</div>
+      </div>
+      <div class="arrow-h">→</div>
+      <div class="box teal">
+        <div class="title">Chunking</div>
+        <div class="sub"><span class="mono">RecursiveCharacterTextSplitter</span> preserves semantic spans</div>
+        <span class="badge">chunk = 500 · overlap = 100</span>
+      </div>
+    </div>
+    <div class="arrow-v">↓</div>
+    <div class="row">
+      <div class="box teal">
+        <div class="title">Dense embedding</div>
+        <div class="sub"><span class="mono">paraphrase-multilingual-MiniLM-L12-v2</span> — multilingual sentence-level vectors for each chunk</div>
+      </div>
+      <div class="arrow-h">→</div>
+      <div class="box teal">
+        <div class="title">Vector store indexing</div>
+        <div class="sub">ChromaDB — each chunk stored with <span class="mono">document_id</span> + <span class="mono">chunk_id</span> metadata · cosine similarity search</div>
+        <span class="badge">Fixed index shared across all models</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="conn-line"></div><div class="conn-arrow">↓</div></div>
+
+  <!-- PHASE 2 -->
+  <div class="phase online">
+    <div class="phase-label online-l"><span class="dot"></span>Phase 2 — Online retrieval-augmented generation</div>
+
+    <div class="row center" style="margin-bottom:6px">
+      <div class="box blue" style="max-width:400px">
+        <div class="title">Input query (Arabic)</div>
+        <div class="sub">Embedded with same encoder · cosine similarity search against ChromaDB index</div>
+        <span class="badge">top-k = 5 chunks returned per query</span>
+      </div>
+    </div>
+    <div class="arrow-v">↓</div>
+
+    <div class="row center" style="margin-bottom:6px">
+      <div class="box purple" style="max-width:600px">
+        <div class="title">Shared Arabic prompt template  (LangChain RetrievalQA · stuff strategy)</div>
+        <div class="sub">Inject question + concatenated top-5 context chunks · enforce Modern Standard Arabic · require exact abstention phrase <span class="mono">غير موجود في السياق</span> when evidence is absent · identical across all models</div>
+        <span class="badge">temperature = 0.0 · zero-shot · deterministic decoding</span>
+      </div>
+    </div>
+    <div class="arrow-v">↓</div>
+
+    <div class="section-label" style="text-align:center;margin-bottom:8px;color:#3C3489">Three generation backbones — OpenRouter API</div>
+    <div class="model-row">
+      <div class="model-box blue">
+        <div class="m-name">LLaMA 3 8B Instruct</div>
+        <div class="m-sub mono">meta-llama/llama-3-8b-instruct</div>
+        <div class="m-sub" style="margin-top:5px;font-weight:600;color:#042C53">Mean latency: 1.23 s</div>
+      </div>
+      <div class="model-box purple">
+        <div class="m-name">Command-R7B-12-2024</div>
+        <div class="m-sub mono">cohere/command-r7b-12-2024</div>
+        <div class="m-sub" style="margin-top:5px;font-weight:600;color:#26215C">Mean latency: 1.51 s</div>
+      </div>
+      <div class="model-box coral">
+        <div class="m-name">Mistral-7B-Instruct-v0.1</div>
+        <div class="m-sub mono">mistralai/mistral-7b-instruct-v0.1</div>
+        <div class="m-sub" style="margin-top:5px;font-weight:600;color:#4A1B0C">Mean latency: 6.44 s (3K ctx)</div>
+      </div>
+    </div>
+    <div class="arrow-v">↓</div>
+
+    <div class="row center">
+      <div class="box purple" style="max-width:420px">
+        <div class="title">Generated answer</div>
+        <div class="sub">Concise Arabic answer — or abstention phrase if supporting evidence is absent from retrieved context</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="conn-line"></div><div class="conn-arrow">↓</div></div>
+
+  <!-- PHASE 3 -->
+  <div class="phase eval">
+    <div class="phase-label eval-l"><span class="dot"></span>Phase 3 — Multidimensional evaluation</div>
+    <div class="eval-grid">
+
+      <div class="box amber">
+        <div class="title">Retrieval metrics</div>
+        <div class="sub">MRR@5 · nDCG@5</div>
+        <div class="sub" style="margin-top:5px">Based on gold document IDs · identical across all models (shared retriever)</div>
+      </div>
+
+      <div class="box amber">
+        <div class="title">Task-level metrics</div>
+        <div class="sub">EM · EM-25 (answerable) · Strict &amp; flexible abstention accuracy (unanswerable) · False abstention rate</div>
+        <div class="sub" style="margin-top:5px">Arabic normalization applied to both predictions and references · 95% bootstrap CIs</div>
+      </div>
+
+      <div class="box amber">
+        <div class="title">Short-answer overlap</div>
+        <div class="sub">Token Precision / Recall / F₁ · ROUGE-L · BLEU-short · BLEU 1 / 2 / 4</div>
+        <div class="sub" style="margin-top:5px">Answerable subset only (n = 500)</div>
+      </div>
+
+      <div class="box green" style="grid-column:1/3">
+        <div class="title">RAGAS grounding-aware metrics</div>
+        <div class="sub">Answer Relevancy · Faithfulness · Context Recall · Context Precision · Answer Correctness · Answer Similarity</div>
+        <div class="sub" style="margin-top:5px">Judge LLM: <span class="mono">openai/gpt-4.1-mini</span> via OpenRouter · Embeddings: <span class="mono">intfloat/multilingual-e5-large</span></div>
+        <span class="badge">Computed separately for ALL · ANSWERABLE · UNANSWERABLE subsets</span>
+      </div>
+
+      <div class="box green">
+        <div class="title">Statistical significance</div>
+        <div class="sub">Paired permutation tests B = 10,000 · 95% bootstrap CIs · Holm–Bonferroni + BH-FDR correction across 54 pairwise-metric-subset combinations</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="connector"><div class="conn-line"></div><div class="conn-arrow">↓</div></div>
+
+  <!-- OUTPUT -->
+  <div class="io-row">
+    <span class="io-pill output">
+      <span style="font-size:14px">✓</span>
+      Results serialized — CSV · JSON · Markdown · figures · GitHub repository
+    </span>
+  </div>
+
+</div>
+</body>
+</html>

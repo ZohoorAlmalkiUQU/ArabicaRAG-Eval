@@ -59,6 +59,8 @@ This work uses the ArabicaQA dataset:
 
 ## System Overview
 
+![RAG pipeline overview](rag_pipeline_figure.jpg)
+
 ```text
 Question
    |
