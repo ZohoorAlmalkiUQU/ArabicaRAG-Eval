@@ -12,12 +12,20 @@ It benchmarks a fixed Retrieval-Augmented Generation (RAG) setup on **ArabicaQA*
 
 Evaluation includes classic QA metrics, retrieval ranking metrics, **RAGAS** grounding-aware metrics, and statistical significance analysis with multiple-comparisons correction.
 
+The pipeline is organized as six sequential notebooks (`00` through `05`); see [Pipeline / Notebook Order](#pipeline--notebook-order) below for what each one does and must be run in order.
+
 ---
 
 ## Project Structure
 
 ```text
-├── ArabicaQA_RAG_Eval_OpenRouter.ipynb
+├── 00_dataset-load_statis.ipynb
+├── 01_sample_sample-statis.ipynb
+├── 02_RAG.ipynb
+├── 03_EM_EM25_ans-abstention-rate.ipynb
+├── 04_RAGAS_statistical-analysis.ipynb
+├── 05_extra-metrics.ipynb
+├── Old_ArabicaQA_RAG_Eval_OpenRouter.ipynb   # superseded monolithic version, kept for reference only
 ├── requirements.txt
 ├── .env                          # OPENROUTER_API_KEY (not committed)
 ├── LICENSE
@@ -28,7 +36,11 @@ Evaluation includes classic QA metrics, retrieval ranking metrics, **RAGAS** gro
     ├── dataset
     ├── diagnostics
     ├── predictions
+    │   └── figures_strict_flexible
     ├── statistical_analysis
+    ├── ragas_full
+    │   ├── figures
+    │   └── figures_full
     ├── ragas_full_llama_mistral_command
     │   ├── ci_analysis
     │   └── figures
@@ -40,15 +52,45 @@ Evaluation includes classic QA metrics, retrieval ranking metrics, **RAGAS** gro
 
 - `dataset/` — full ArabicaQA data structure (MRC, OpenQA) and processed evaluation subsets (e.g., 1000-example balanced sample), including intermediate analysis files.
 - `diagnostics/` — data integrity checks (gold answer validation, unanswerable label audits).
-- `predictions/` — model outputs, retrieved contexts, and abstention/refusal rate results.
+- `predictions/` — model outputs, retrieved contexts, EM/EM25 scores, and abstention/refusal rate results.
+- `statistical_analysis/` — bootstrap CI tables for EM/EM25/Token-F1 model-level metrics.
+- `ragas_full/` — descriptive-statistics figures for the full dataset and the 1,000-question sample (context/question/answer length, foreign-word counts, NER distributions). Despite the folder name, this does not contain RAGAS scores.
 - `ragas_full_llama_mistral_command/` — RAGAS evaluation outputs, per-question scores, CI analysis, paired significance tests, and generated figures.
 - `extra_metrics_llama_mistral_command/` — extra generation and retrieval metrics (ROUGE-L, BLEU, Token-F1, MRR@K, nDCG@K) and figures.
-- `statistical_analysis/` — bootstrap CI tables for model-level metrics.
 
-## Repository Contents
+## Pipeline / Notebook Order
 
-- **`ArabicaQA_RAG_Eval_OpenRouter.ipynb`**
-  End-to-end notebook: preprocessing → retrieval indexing → generation (OpenRouter) → evaluation (EM/overlap/retrieval/RAGAS) → statistical significance analysis → results export.
+Run the notebooks in this order — each one reads files written by the notebook(s) before it.
+
+1. **`00_dataset-load_statis.ipynb`**
+   Loads the raw ArabicaQA MRC JSON splits, flattens them into one dataframe, and computes full-dataset descriptive statistics (lengths, foreign-word counts, NER entity distribution).
+   - Reads: `arabicaqa_rag_results/dataset/MRC/{train,validation,test}.json`
+   - Writes: `arabicaqa_rag_results/dataset/df_all_mrc.csv`, `.../dataset/full_arabicaQA_MRC_dataset_ner_counts.csv`, figures in `.../ragas_full/`
+
+2. **`01_sample_sample-statis.ipynb`**
+   Draws the fixed, seeded 1,000-question evaluation subset (500 answerable + 500 unanswerable) and computes sample-level descriptive statistics.
+   - Reads: `arabicaqa_rag_results/dataset/df_all_mrc.csv`
+   - Writes: `arabicaqa_rag_results/dataset/df_sample_1000.csv`, `.../dataset/sample_ner_counts.csv`, figures in `.../ragas_full/`
+
+3. **`02_RAG.ipynb`** — *makes paid OpenRouter API calls*
+   Builds the Chroma vector index over the sample contexts, retrieves top-k passages, generates answers with all three models via OpenRouter, merges per-model outputs into one comparison file, and runs a gold-answer/answerability integrity check.
+   - Reads: `arabicaqa_rag_results/dataset/df_sample_1000.csv`
+   - Writes: `arabicaqa_rag_results/predictions/comparison_llama_mistral_command_1000.{csv,json}` (the file every downstream notebook depends on), per-model prediction files, `.../diagnostics/*.csv`
+
+4. **`03_EM_EM25_ans-abstention-rate.ipynb`**
+   Computes EM and EM25 (strict + flexible abstention policies), bootstrap CIs and pairwise significance for EM/EM25/Token-F1, and the answerable-abstention rate.
+   - Reads: `arabicaqa_rag_results/predictions/comparison_llama_mistral_command_1000.csv`
+   - Writes: `.../predictions/final_scores_strict_and_flexible_abstention_corrected.{csv,json,txt,md}`, `.../statistical_analysis/bootstrap_*_corrected.csv`, `.../predictions/answerable_abstention_rate_strict_and_flexible.csv`, figures in `.../predictions/figures_strict_flexible/`
+
+5. **`04_RAGAS_statistical-analysis.ipynb`** — *makes paid OpenRouter API calls (LLM judge)*
+   Runs RAGAS grounding metrics (faithfulness, answer relevancy, context precision/recall, answer similarity/correctness), bootstrap CIs, paired bootstrap and permutation significance tests, BH-FDR and Holm corrections, abstention/refusal-rate CIs, and summary figures.
+   - Reads: `arabicaqa_rag_results/predictions/comparison_llama_mistral_command_1000.csv`
+   - Writes: everything under `.../ragas_full_llama_mistral_command/` (per-model/per-question/summary/NaN/latency tables, `ci_analysis/`, `figures/`)
+
+6. **`05_extra-metrics.ipynb`**
+   Computes additional retrieval metrics (MRR@5, nDCG@5) and generation-quality metrics (ROUGE-L, BLEU, token Precision/Recall/F1) not covered by RAGAS, with summary figures and a heatmap.
+   - Reads: `arabicaqa_rag_results/predictions/comparison_llama_mistral_command_1000.csv`
+   - Writes: everything under `.../extra_metrics_llama_mistral_command/`
 
 ---
 
@@ -150,7 +192,7 @@ This project uses [OpenRouter](https://openrouter.ai/) to access LLMs via a unif
 OPENROUTER_API_KEY=your_key_here
 ```
 
-The notebook loads this key automatically via `python-dotenv`. No local model downloads or GPU hardware are required.
+`02_RAG.ipynb` and `04_RAGAS_statistical-analysis.ipynb` load this key automatically via `python-dotenv`. No local model downloads or GPU hardware are required.
 
 ---
 
@@ -162,11 +204,16 @@ Launch Jupyter Notebook:
 jupyter notebook
 ```
 
-Open:
+Run the notebooks **in numeric order**, top to bottom within each one — every notebook after `01` depends on files written by the notebook(s) before it (see [Pipeline / Notebook Order](#pipeline--notebook-order)):
 
-- `ArabicaQA_RAG_Eval_OpenRouter.ipynb`
+1. `00_dataset-load_statis.ipynb`
+2. `01_sample_sample-statis.ipynb`
+3. `02_RAG.ipynb`
+4. `03_EM_EM25_ans-abstention-rate.ipynb`
+5. `04_RAGAS_statistical-analysis.ipynb`
+6. `05_extra-metrics.ipynb`
 
-Then run cells in order.
+> **Paid API calls:** `02_RAG.ipynb` (answer generation) and `04_RAGAS_statistical-analysis.ipynb` (RAGAS LLM-judge scoring) both call OpenRouter and incur cost per run. Avoid re-running them unnecessarily — the other notebooks only read the CSV/JSON files these two produce.
 
 ### Expected outputs
 
@@ -187,7 +234,7 @@ Depending on your notebook settings, you will typically produce:
 ### Task-level
 
 - **EM** (Exact Match after normalization)
-- **EM25**: Exact match computed after truncating model outputs to 25 characters post-normalization.
+- **EM25**: character-prefix-strip exact match — a prediction is scored correct if it exactly matches a reference answer after stripping 0–25 leading characters from the normalized prediction, tolerating verbose response prefixes common in instruction-tuned models.
 - **No-answer accuracy** (for unanswerable subset)
 - **Abstention rate** (strict and flexible)
 - **Answerable refusal rate** (incorrect abstention on answerable questions)
