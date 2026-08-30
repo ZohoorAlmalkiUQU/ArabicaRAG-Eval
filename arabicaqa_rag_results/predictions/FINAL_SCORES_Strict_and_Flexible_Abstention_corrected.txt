@@ -1,6 +1,6 @@
 ArabicaQA RAG Evaluation – Strict and Flexible Abstention Results (EM25 corrected)
 ====================================================================================================
-Date: 2026-08-28 15:22
+Date: 2026-08-30 18:31
 Results file: arabicaqa_rag_results/predictions\comparison_llama_mistral_command_1000.csv
 Total questions: 1,000
 Answerable: 500

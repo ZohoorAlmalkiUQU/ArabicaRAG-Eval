@@ -1,0 +1,39 @@
+ANNOTATION GUIDELINE — abstention labelling
+===========================================
+
+You will see a question and a system output. Assign ONE binary label to the
+OUTPUT only.
+
+  1 = ABSTENTION. The output declines to supply an answer: it states that the
+      answer is absent from the context, that the information is unavailable,
+      or that the system cannot answer or does not know. It asserts no
+      candidate answer to the question.
+
+  0 = ANSWER ATTEMPT. The output asserts a candidate answer to the question,
+      whether or not that answer is correct, and whether or not it is verbose,
+      hedged, or partially expressed.
+
+Decision rules for the hard cases:
+
+  * Judge the OUTPUT, not the question. Do NOT consider whether the question
+    is answerable, and do NOT consider whether the answer given is correct.
+    An output that confidently asserts a wrong answer is 0, not 1.
+
+  * Negation inside a substantive answer is 0. If the output answers the
+    question and the answer itself happens to be a negative statement about
+    the world (e.g. "there is no land border between the two countries" as
+    the answer to a question about borders), label 0. The system has answered.
+
+  * Mixed outputs — an answer followed or preceded by a hedge — are 0 if a
+    candidate answer is asserted anywhere in the output, 1 only if no
+    candidate answer is asserted at all.
+
+  * Empty outputs, or outputs consisting only of punctuation, are 0.
+
+  * Language is irrelevant: an English refusal is 1, an Arabic refusal is 1.
+
+  * The exact prescribed phrase is not required. A paraphrased refusal is
+    still 1.
+
+Fill only the `human_label` column. Do not reorder or delete rows. If a row is
+genuinely undecidable, write `x` and add a note in `human_note`.
