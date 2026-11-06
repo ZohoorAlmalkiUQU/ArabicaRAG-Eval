@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff;font-family:'Segoe UI',Arial,sans-serif;color:#000}
+.wrap{width:1200px;padding:16px;margin:0 auto;background:#fff}
+
+/* All text is pure black; colour lives only in fills and borders */
+.box{flex:1;display:flex;flex-direction:column;justify-content:center;border-radius:10px;padding:10px 14px;border:2.5px solid;color:#000}
+.title{font-size:21px;font-weight:700;line-height:1.2}
+.sub{font-size:18px;font-weight:600;line-height:1.3;margin-top:4px}
+.badge{align-self:flex-start;font-size:16px;font-weight:700;padding:1px 11px;border-radius:20px;margin-top:7px;background:#fff;border:2px solid;color:#000}
+.mono{font-family:Consolas,monospace;font-size:16px;font-weight:700;background:rgba(0,0,0,.08);padding:0 4px;border-radius:3px}
+.mono.ar{font-family:'Segoe UI',Arial,sans-serif;font-size:18px;white-space:nowrap}
+
+.teal{background:#d0f5ea;border-color:#0F6E56}.teal .badge{border-color:#0F6E56}
+.blue{background:#daeeff;border-color:#185FA5}.blue .badge{border-color:#185FA5}
+.purple{background:#dddcfc;border-color:#3C3489}.purple .badge{border-color:#3C3489}
+.coral{background:#fdd9cc;border-color:#993C1D}
+.amber{background:#fdecc8;border-color:#854F0B}
+.green{background:#d4edba;border-color:#3B6D11}.green .badge{border-color:#3B6D11}
+.gray{background:#e8e7e0;border-color:#5F5E5A}
+
+.row{display:flex;align-items:stretch}
+.row.center{justify-content:center}
+.model-row{display:flex;gap:8px}
+.model-box{flex:1;border-radius:10px;padding:8px 6px;border-width:2.5px;border-style:solid;text-align:center;color:#000}
+.m-name{font-size:21px;font-weight:700;line-height:1.2}
+.m-sub{font-size:18px;font-weight:600;margin-top:3px}
+.m-sub.mono{font-size:16px;font-weight:700;display:inline-block;white-space:nowrap}
+
+.eval-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:8px}
+.amber{grid-column:span 3}
+
+.phase{border-radius:12px;padding:10px 12px 12px;border:2.5px dashed}
+.phase.offline{border-color:#0F6E56;background:#f0fdf8}
+.phase.online{border-color:#3C3489;background:#f4f3ff}
+.phase.eval{border-color:#854F0B;background:#fef9f0}
+.phase-label{font-size:21px;font-weight:700;margin-bottom:8px;color:#000}
+.section-label{font-size:18px;font-weight:700;margin-bottom:6px}
+
+/* Arrows drawn in CSS so they stay solid at any scale */
+.arrow-v{position:relative;height:28px}
+.arrow-v::before{content:"";position:absolute;left:50%;top:3px;bottom:12px;width:4px;margin-left:-2px;background:#000}
+.arrow-v::after{content:"";position:absolute;left:50%;bottom:2px;margin-left:-9px;border-left:9px solid transparent;border-right:9px solid transparent;border-top:13px solid #000}
+.arrow-h{position:relative;width:36px;flex-shrink:0}
+.arrow-h::before{content:"";position:absolute;top:50%;left:4px;right:13px;height:4px;margin-top:-2px;background:#000}
+.arrow-h::after{content:"";position:absolute;top:50%;right:3px;margin-top:-9px;border-top:9px solid transparent;border-bottom:9px solid transparent;border-left:13px solid #000}
+
+.io-row{text-align:center}
+.io-pill{display:inline-block;border-radius:26px;padding:6px 20px;font-size:21px;font-weight:700;border:2.5px solid;color:#000}
+.io-pill.input{background:#daeeff;border-color:#185FA5}
+.io-pill.output{background:#d4edba;border-color:#3B6D11}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- INPUT -->
+  <div class="io-row">
+    <span class="io-pill input">
+      
+      ArabicaQA MRC — 1,000 questions &nbsp;(500 answerable · 500 unanswerable)
+    </span>
+  </div>
+  <div class="arrow-v"></div>
+
+  <!-- PHASE 1 -->
+  <div class="phase offline">
+    <div class="phase-label offline-l">Phase 1 — Offline indexing</div>
+    <div class="row">
+      <div class="box teal">
+        <div class="title">Dataset preprocessing</div>
+        <div class="sub">Flatten JSON splits · fix punctuation-only answers · Arabic text normalization · balance answerable / unanswerable</div>
+        <span class="badge">random_state = 42</span>
+      </div>
+      <div class="arrow-h"></div>
+      <div class="box teal">
+        <div class="title">Document deduplication</div>
+        <div class="sub">Remove duplicate passages by <span class="mono">document_id</span> · retain chunk metadata for traceability</div>
+      </div>
+      <div class="arrow-h"></div>
+      <div class="box teal">
+        <div class="title">Chunking</div>
+        <div class="sub"><span class="mono">RecursiveCharacterTextSplitter</span> preserves semantic spans</div>
+        <span class="badge">chunk = 500 · overlap = 100</span>
+      </div>
+    </div>
+    <div class="arrow-v"></div>
+    <div class="row">
+      <div class="box teal">
+        <div class="title">Dense embedding</div>
+        <div class="sub"><span class="mono">paraphrase-multilingual-MiniLM-L12-v2</span> — multilingual sentence-level vectors for each chunk</div>
+      </div>
+      <div class="arrow-h"></div>
+      <div class="box teal">
+        <div class="title">Vector store indexing</div>
+        <div class="sub">ChromaDB — each chunk stored with <span class="mono">document_id</span> + <span class="mono">chunk_id</span> metadata · cosine similarity search</div>
+        <span class="badge">Fixed index shared across all models</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-v"></div>
+
+  <!-- PHASE 2 -->
+  <div class="phase online">
+    <div class="phase-label online-l">Phase 2 — Online retrieval-augmented generation</div>
+
+    <div class="row center" >
+      <div class="box blue" style="max-width:640px">
+        <div class="title">Input query (Arabic)</div>
+        <div class="sub">Embedded with same encoder · cosine similarity search against ChromaDB index</div>
+        <span class="badge">top-k = 5 chunks returned per query</span>
+      </div>
+    </div>
+    <div class="arrow-v"></div>
+
+    <div class="row center" >
+      <div class="box purple" >
+        <div class="title">Shared Arabic prompt template  (LangChain RetrievalQA · stuff strategy)</div>
+        <div class="sub">Inject question + concatenated top-5 context chunks · enforce Modern Standard Arabic · require exact abstention phrase <bdi dir="rtl" class="mono ar">غير موجود في السياق</bdi> when evidence is absent · identical across all models</div>
+        <span class="badge">temperature = 0.0 · zero-shot · deterministic decoding</span>
+      </div>
+    </div>
+    <div class="arrow-v"></div>
+
+    <div class="section-label" style="text-align:center">Three generation backbones — OpenRouter API</div>
+    <div class="model-row">
+      <div class="model-box blue">
+        <div class="m-name">LLaMA 3 8B Instruct</div>
+        <div class="m-sub mono">meta-llama/llama-3-8b-instruct</div>
+        <div class="m-sub" style="margin-top:5px;font-weight:600">Mean latency: 1.23 s</div>
+      </div>
+      <div class="model-box purple">
+        <div class="m-name">Command-R7B-12-2024</div>
+        <div class="m-sub mono">cohere/command-r7b-12-2024</div>
+        <div class="m-sub" style="margin-top:5px;font-weight:600">Mean latency: 1.51 s</div>
+      </div>
+      <div class="model-box coral">
+        <div class="m-name">Mistral-7B-Instruct-v0.1</div>
+        <div class="m-sub mono">mistralai/mistral-7b-instruct-v0.1</div>
+        <div class="m-sub" style="margin-top:5px;font-weight:600">Mean latency: 6.44 s (3K ctx)</div>
+      </div>
+    </div>
+    <div class="arrow-v"></div>
+
+    <div class="row center">
+      <div class="box purple" style="max-width:700px">
+        <div class="title">Generated answer</div>
+        <div class="sub">Concise Arabic answer — or abstention phrase if supporting evidence is absent from retrieved context</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-v"></div>
+
+  <!-- PHASE 3 -->
+  <div class="phase eval">
+    <div class="phase-label eval-l">Phase 3 — Multidimensional evaluation</div>
+    <div class="eval-grid">
+
+      <div class="box amber">
+        <div class="title">Retrieval metrics</div>
+        <div class="sub">MRR@5 · nDCG@5</div>
+        <div class="sub" style="margin-top:5px">Based on gold document IDs · identical across all models (shared retriever)</div>
+      </div>
+
+      <div class="box amber">
+        <div class="title">Task-level metrics</div>
+        <div class="sub">EM · EM-25 (answerable) · Strict &amp; flexible abstention accuracy (unanswerable) · False abstention rate</div>
+        <div class="sub" style="margin-top:5px">Arabic normalization applied to both predictions and references · 95% bootstrap CIs</div>
+      </div>
+
+      <div class="box amber">
+        <div class="title">Short-answer overlap</div>
+        <div class="sub">Token Precision / Recall / F₁ · ROUGE-L · BLEU-short · BLEU&nbsp;1&nbsp;/&nbsp;2&nbsp;/&nbsp;4</div>
+        <div class="sub" style="margin-top:5px">Answerable subset only (n&nbsp;=&nbsp;500)</div>
+      </div>
+
+      <div class="box gray" style="grid-column:span 3">
+        <div class="title">Abstention matching</div>
+        <div class="sub">Canonical <span class="mono">abstention_matcher.py</span> — strict (exact phrase) &amp; flexible (26-pattern, bilingual) matchers shared by all notebooks, with self-tests for pattern subsumption</div>
+      </div><div class="box green" style="grid-column:span 7">
+        <div class="title">RAGAS grounding-aware metrics</div>
+        <div class="sub">Answer Relevancy · Faithfulness · Context Recall · Context Precision · Answer Correctness · Answer Similarity</div>
+        <div class="sub" style="margin-top:5px">Judge LLM: <span class="mono">openai/gpt-4.1-mini</span> via OpenRouter · Embeddings: <span class="mono">intfloat/multilingual-e5-large</span></div>
+        <span class="badge">Computed separately for ALL · ANSWERABLE · UNANSWERABLE subsets</span>
+      </div>
+
+      <div class="box green" style="grid-column:span 5">
+        <div class="title">Statistical significance</div>
+        <div class="sub">Paired permutation tests B = 10,000 · 95% bootstrap CIs · Holm–Bonferroni + BH-FDR correction across 54 pairwise-metric-subset combinations</div>
+        <div class="sub" style="margin-top:5px">TOST equivalence testing (Δ = 0.05, 90% bootstrap CI) for non-significant faithfulness / context-recall / context-precision comparisons</div>
+      </div>
+
+      <div class="box gray" style="grid-column:span 12">
+        <div class="title">Robustness diagnostics</div>
+        <div class="sub">Context-window overflow check for the legacy <span class="mono">mistral-7b-instruct-v0.1</span> endpoint — real tokenizer count vs. OpenRouter window confirms 0% of prompts exceeded budget, ruling out silent middle-out compression as the cause of Mistral's abstention behavior</div>
+        <div class="sub" style="margin-top:5px">Split-origin sensitivity analysis — checks whether train- vs. test-origin instances in the 1,000-question sample behave differently on EM&nbsp;/&nbsp;EM-25 / token-F1 / abstention</div><div class="sub" style="margin-top:5px">Human validation of the flexible abstention matcher — 360 stratified outputs labeled by two annotators (Cohen's κ)</div><div class="sub" style="margin-top:5px">Sensitivity of RAGAS scores to the judge model — 300-question sub-sample re-scored with Qwen3-235B-A22B</div><div class="sub" style="margin-top:5px">Sampling-seed stability — split-half replication over 100 seeds on disjoint 500-question halves</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="arrow-v"></div>
+
+  <!-- OUTPUT -->
+  <div class="io-row">
+    <span class="io-pill output">
+      
+      Results serialized — CSV · JSON · Markdown · figures · GitHub repository
+    </span>
+  </div>
+
+</div>
+</body>
+</html>

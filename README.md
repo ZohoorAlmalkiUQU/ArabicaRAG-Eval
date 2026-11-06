@@ -10,9 +10,9 @@ It benchmarks a fixed Retrieval-Augmented Generation (RAG) setup on **ArabicaQA*
 - **Mistral-7B-Instruct** (`mistralai/mistral-7b-instruct-v0.1`)
 - **Command-R7B** (`cohere/command-r7b-12-2024`)
 
-Evaluation includes classic QA metrics, retrieval ranking metrics, **RAGAS** grounding-aware metrics, statistical significance analysis with multiple-comparisons correction, TOST equivalence testing, and a set of reviewer-motivated robustness diagnostics (human-validated abstention matching, context-window overflow check, split-origin sensitivity).
+Evaluation includes classic QA metrics, retrieval ranking metrics, **RAGAS** grounding-aware metrics, statistical significance analysis with multiple-comparisons correction, TOST equivalence testing, and a set of reviewer-motivated robustness diagnostics (human-validated abstention matching, context-window overflow check, split-origin sensitivity, judge-model sensitivity, sampling-seed stability).
 
-The pipeline is organized as seven sequential notebooks (`00` through `06`), plus two standalone Python utilities for abstention matching; see [Pipeline / Notebook Order](#pipeline--notebook-order) below for what each one does and must be run in order.
+The pipeline is organized as seven sequential notebooks (`00` through `06`), plus standalone Python scripts for abstention matching, second-judge re-scoring, and sampling-seed stability; see [Pipeline / Notebook Order](#pipeline--notebook-order) below for what each one does and the order to run them in.
 
 ---
 
@@ -26,10 +26,17 @@ The pipeline is organized as seven sequential notebooks (`00` through `06`), plu
 ├── 04_RAGAS_statistical-analysis.ipynb
 ├── 05_extra-metrics.ipynb
 ├── 06_split-origin_sensitivity_analysis.ipynb
-├── abstention_matcher.py         # canonical strict/flexible abstention matcher, imported by the notebooks and the script below
-├── validate_abstention_matcher.py  # human-validation workflow for the abstention matcher (build sample / score agreement)
-├── Old_ArabicaQA_RAG_Eval_OpenRouter.ipynb   # superseded monolithic version, kept for reference only
+├── abstention_matcher.py         # canonical strict/flexible abstention matcher, imported by the notebooks and the scripts below
+├── validate_abstention_matcher.py  # human-validation workflow for the abstention matcher (build sample / self-test / score agreement)
+├── second_judge_ragas.py         # re-scores a sub-sample with a second RAGAS judge (paid API calls)
+├── second_judge_compare.py       # compares the second judge with the original judge
+├── second_judge_faithfulness_check.py  # shows where the two judges disagree on Faithfulness
+├── check_second_judge.py         # checks the manuscript's second-judge numbers against the per-question CSV
+├── seed_stability_analysis.py    # split-half sampling-seed stability analysis
+├── rag_pipeline_figure.html      # source of the pipeline figure
+├── rag_pipeline_figure.jpg
 ├── requirements.txt
+├── requirements_ner.txt          # separate pinned environment for the NER step
 ├── .env                          # OPENROUTER_API_KEY (not committed)
 ├── LICENSE
 ├── DATASET_LICENSE
@@ -43,6 +50,10 @@ The pipeline is organized as seven sequential notebooks (`00` through `06`), plu
     ├── statistical_analysis
     ├── split_sensitivity
     ├── annotation
+    ├── second_judge
+    │   └── qwen__qwen3-235b-a22b-2507
+    │       └── comparison
+    ├── seed_stability
     ├── ragas_full
     │   ├── figures
     │   └── figures_full
@@ -60,7 +71,9 @@ The pipeline is organized as seven sequential notebooks (`00` through `06`), plu
 - `predictions/` — model outputs, retrieved contexts, EM/EM25 scores, and abstention/refusal rate results.
 - `statistical_analysis/` — bootstrap CI tables for EM/EM25/Token-F1 model-level metrics.
 - `split_sensitivity/` — outputs of the train- vs. test-origin sensitivity analysis (per-split metric breakdown and significance tests).
-- `annotation/` — human-validation materials and results for the abstention matcher: annotation guideline, per-annotator label sheets, stratum census, and (once scored) inter-annotator agreement and matcher precision/recall against human labels.
+- `annotation/` — human-validation materials and results for the abstention matcher: annotation guideline, per-annotator label sheets, adjudicated labels, stratum census, inter-annotator agreement, matcher precision/recall against human labels, population-weighted re-estimates, and a false-positive taxonomy.
+- `second_judge/` — second-judge RAGAS scores, cost ledger, and response cache for each judge; `comparison/` holds the agreement, model-ordering, and pairwise-test results against the original judge.
+- `seed_stability/` — split-half results per model, per model pair, and per metric ranking, plus a summary JSON.
 - `ragas_full/` — descriptive-statistics figures for the full dataset and the 1,000-question sample (context/question/answer length, foreign-word counts, NER distributions). Despite the folder name, this does not contain RAGAS scores.
 - `ragas_full_llama_mistral_command/` — RAGAS evaluation outputs, per-question scores, CI analysis, paired significance tests, TOST equivalence-testing results, and generated figures.
 - `extra_metrics_llama_mistral_command/` — extra generation and retrieval metrics (ROUGE-L, BLEU, Token-F1, MRR@K, nDCG@K) and figures.
@@ -104,15 +117,28 @@ Run the notebooks in this order — each one reads files written by the notebook
    - Reads: `arabicaqa_rag_results/dataset/df_all_mrc.csv`, `.../dataset/df_sample_1000.csv`, `.../predictions/comparison_llama_mistral_command_1000.csv`
    - Writes: `.../dataset/split_overlap_summary.json`, `.../dataset/sample_split_labels.csv`, `.../split_sensitivity/breakdown_by_split.csv`, `.../split_sensitivity/train_vs_test_tests.csv`
 
-### Standalone abstention-matching utilities
+### Standalone scripts
 
-Not part of the numbered notebook sequence, but used by it and by a separate human-validation workflow:
+Not part of the numbered notebook sequence. The notebooks import `abstention_matcher.py`; the other scripts read files the notebooks write, so run them after notebook `04`.
 
 - **`abstention_matcher.py`** — single canonical implementation of the strict (exact-phrase) and flexible (26-pattern, bilingual) abstention matchers. All notebooks import from this module so every reported abstention figure is produced by identical matching logic. Includes a `self_test()` that checks for dead patterns and confirms strict ⇒ flexible.
-- **`validate_abstention_matcher.py`** (Reviewer #1, Concern #5) — human-validation workflow for the flexible matcher, run in two steps:
+- **`validate_abstention_matcher.py`** (Reviewer #1, Concern #5) — human-validation workflow for the flexible matcher, run in three steps:
   - `build`: draws a blinded, stratified sample from the predictions file (stratified on the matcher's own flag × answerability) and writes one annotation sheet per annotator plus `ANNOTATION_GUIDELINE.txt`.
+  - `check`: pipeline self-test, run once before annotating. It substitutes the matcher's own flags for the human labels and verifies that the weighted estimator reproduces the reported matcher figures exactly.
   - `score`: reads the completed sheets and reports inter-annotator agreement (Cohen's kappa), matcher precision/recall/F1 against the adjudicated human labels (with 95% bootstrap CIs), population-weighted re-estimates of abstention accuracy and false-abstention rate, and an error taxonomy for the matcher's false positives.
   - Reads/writes under `arabicaqa_rag_results/annotation/`.
+- **`second_judge_ragas.py`** — *makes paid OpenRouter API calls (LLM judge)*
+  Re-scores a stratified sub-sample of the archived answers with a second, independent judge (`qwen/qwen3-235b-a22b-2507`). Everything except the judge follows `04_RAGAS_statistical-analysis.ipynb`, and no answer is regenerated. Modes: `estimate` (no spend), `pilot`, and `run`. Judge responses and finished scores are cached on disk, so a rerun does not pay twice, and `--budget-usd` caps cumulative spend.
+  - Reads: `arabicaqa_rag_results/ragas_full_llama_mistral_command/ragas_per_question_all_models.csv`
+  - Writes: `.../second_judge/qwen__qwen3-235b-a22b-2507/`
+- **`second_judge_compare.py`** — compares the two judges on the same sub-sample, without API calls: per-item Spearman agreement, mean score offsets, model orderings, and the direction and significance of each pairwise model difference under each judge (paired permutation test, B = 10,000, Holm correction).
+  - Writes: `.../second_judge/qwen__qwen3-235b-a22b-2507/comparison/`
+- **`second_judge_faithfulness_check.py`** — optional and descriptive, without API calls. Breaks the Faithfulness disagreement between the judges down by model, subset, and abstention.
+  - Writes: `.../comparison/faithfulness_by_abstention.csv`
+- **`check_second_judge.py`** — recomputes the manuscript's second-judge numbers from `second_judge_per_question.csv`, using the standard library only. Context Recall/Precision rows and anything computed on the full 1,000 questions cannot be checked from this file.
+- **`seed_stability_analysis.py`** — sampling-seed stability analysis, with no new generation or judging. For each of 100 seeds, it splits the 1,000 questions into two disjoint halves of 500, stratified by answerability, recomputes every metric and pairwise comparison on each half, and records whether both halves reproduce the full-sample direction, significance, and model ordering.
+  - Reads: `arabicaqa_rag_results/predictions/comparison_llama_mistral_command_1000.csv`, `.../ragas_full_llama_mistral_command/ragas_per_question_all_models.csv`
+  - Writes: `.../seed_stability/`
 
 ---
 
@@ -163,7 +189,7 @@ Statistical Significance Analysis
    - Retrieval metrics (MRR@5, nDCG@5)
    - RAGAS metrics (faithfulness, answer relevancy, context precision/recall, etc.)
    - Statistical significance (paired bootstrap/permutation tests, BH-FDR, Holm correction, TOST equivalence testing)
-   - Robustness diagnostics (Mistral-7B context-window overflow check, split-origin sensitivity analysis)
+   - Robustness diagnostics (Mistral-7B context-window overflow check, split-origin sensitivity analysis, human validation of the flexible abstention matcher, sensitivity of RAGAS scores to the judge model, sampling-seed stability)
 
 ---
 
@@ -181,6 +207,10 @@ Statistical Significance Analysis
 | Answerable / Unanswerable | 500 / 500 |
 | Random seed | 42 |
 | LLM backend | OpenRouter |
+| RAGAS judge | `openai/gpt-4.1-mini` |
+| RAGAS embeddings | `intfloat/multilingual-e5-large` |
+| Second judge (sensitivity check) | `qwen/qwen3-235b-a22b-2507`, 300-question sub-sample |
+| Sampling-seed stability | 100 seeds, two disjoint halves of 500 questions |
 
 ## Installation
 
@@ -215,7 +245,7 @@ This project uses [OpenRouter](https://openrouter.ai/) to access LLMs via a unif
 OPENROUTER_API_KEY=your_key_here
 ```
 
-`02_RAG.ipynb` and `04_RAGAS_statistical-analysis.ipynb` load this key automatically via `python-dotenv`. No local model downloads or GPU hardware are required.
+`02_RAG.ipynb`, `04_RAGAS_statistical-analysis.ipynb`, and `second_judge_ragas.py` load this key automatically via `python-dotenv`. LLM inference runs through OpenRouter, so no local LLM is needed; the embedding models run locally and are downloaded on first use.
 
 ---
 
@@ -237,7 +267,31 @@ Run the notebooks **in numeric order**, top to bottom within each one — every 
 6. `05_extra-metrics.ipynb`
 7. `06_split-origin_sensitivity_analysis.ipynb`
 
-> **Paid API calls:** `02_RAG.ipynb` (answer generation) and `04_RAGAS_statistical-analysis.ipynb` (RAGAS LLM-judge scoring) both call OpenRouter and incur cost per run. Avoid re-running them unnecessarily — the other notebooks only read the CSV/JSON files these two produce.
+> **Paid API calls:** `02_RAG.ipynb` (answer generation), `04_RAGAS_statistical-analysis.ipynb` (RAGAS LLM-judge scoring), and `second_judge_ragas.py` (second-judge re-scoring) call OpenRouter and incur cost per run. Avoid re-running them unnecessarily — the other notebooks and scripts only read the CSV/JSON files they produce.
+
+### Robustness scripts
+
+Run these from the repository root, after the notebooks. The second-judge commands below use the settings of the reported run; `estimate` prices the run without spending anything.
+
+```bash
+# Sensitivity of RAGAS scores to the judge model
+python second_judge_ragas.py estimate --n-questions 300
+python second_judge_ragas.py pilot --budget-usd 0.10
+python second_judge_ragas.py run --n-questions 300 --budget-usd 3.00
+python second_judge_compare.py
+python second_judge_faithfulness_check.py
+
+# Sampling-seed stability (no API calls)
+python seed_stability_analysis.py \
+    --predictions arabicaqa_rag_results/predictions/comparison_llama_mistral_command_1000.csv \
+    --ragas arabicaqa_rag_results/ragas_full_llama_mistral_command/ragas_per_question_all_models.csv \
+    --reference arabicaqa_rag_results/predictions/final_scores_strict_and_flexible_abstention_corrected.csv \
+    --ragas-reference arabicaqa_rag_results/ragas_full_llama_mistral_command/ragas_summary_means.csv \
+    --paper-pvalues arabicaqa_rag_results/ragas_full_llama_mistral_command/ci_analysis/paired_permutation_pvalues_all_corrections.csv \
+    --out-dir arabicaqa_rag_results/seed_stability
+```
+
+For the human-validation workflow, see the usage notes at the top of `validate_abstention_matcher.py`.
 
 ### Expected outputs
 
@@ -249,6 +303,7 @@ Depending on your notebook settings, you will typically produce:
 - RAGAS score reports (JSON/CSV)
 - Bootstrap CI tables (RAGAS metrics, latency, abstention rates)
 - Paired significance test results (with BH-FDR and Holm corrections)
+- Human-validation, second-judge, and sampling-seed stability reports
 - Summary plots
 
 ---
@@ -293,9 +348,11 @@ Depending on your notebook settings, you will typically produce:
 
 ### Robustness diagnostics
 
-- **Human-validated abstention matching** — a stratified sample of model outputs is independently labeled by two human annotators; inter-annotator agreement (Cohen's kappa) and the matcher's precision/recall/F1 against the adjudicated labels are reported, alongside population-weighted re-estimates of abstention accuracy and false-abstention rate
+- **Human-validated abstention matching** — a stratified sample of 360 model outputs (120 per model) is independently labeled by two human annotators; inter-annotator agreement (Cohen's kappa) and the matcher's precision/recall/F1 against the adjudicated labels are reported, alongside population-weighted re-estimates of abstention accuracy and false-abstention rate
 - **Context-window overflow diagnostic** — re-tokenizes every prompt sent to the legacy `mistral-7b-instruct-v0.1` endpoint to check whether any exceeded its context budget and were silently compressed by OpenRouter
 - **Split-origin sensitivity analysis** — tests whether train- and test-origin instances within the 1,000-question evaluation sample score differently, to rule out partition-merging bias
+- **Sensitivity of RAGAS scores to the judge model** — a stratified 300-question sub-sample (150 answerable, 150 unanswerable) is re-scored with `qwen/qwen3-235b-a22b-2507`, to test whether the model comparisons hold under a second, independent judge
+- **Sampling-seed stability** — split-half replication over 100 seeds on disjoint 500-question halves, to test whether the model differences depend on the particular questions sampled
 
 ---
 
@@ -308,7 +365,7 @@ This repo aims to make comparisons fair by:
 - Using deterministic generation settings when possible (temperature=0)
 - Saving retrieved contexts for consistent scoring
 - Using the same OpenRouter API endpoint for all models
-- Validating internal validity with reviewer-motivated robustness checks (context-window overflow diagnostic, split-origin sensitivity analysis, human-validated abstention matching)
+- Validating internal validity with reviewer-motivated robustness checks (context-window overflow diagnostic, split-origin sensitivity analysis, human-validated abstention matching, second-judge sensitivity, sampling-seed stability)
 
 To reproduce exactly, ensure:
 
@@ -352,7 +409,9 @@ If you use this repository, please cite:
 - Deterministic decoding only (temperature=0)
 - Evaluation limited to ArabicaQA
 - No human evaluation of overall answer quality — human annotation is limited to validating the automatic abstention matcher on a stratified sample, not to judging correctness, fluency, or grounding of generated answers directly
-- Dependent on OpenRouter API availability and model deprecation schedules (note: `mistralai/mistral-7b-instruct-v0.1` on OpenRouter is scheduled for deprecation May 30, 2026)
+- Second-judge comparison covers a 300-question sub-sample, not all 1,000 questions
+- Sampling-seed stability re-uses the 1,000-question sample: it tests split-half replication and does not draw new questions from ArabicaQA
+- Dependent on OpenRouter API availability and model deprecation schedules (note: `mistralai/mistral-7b-instruct-v0.1` on OpenRouter was scheduled for deprecation on May 30, 2026)
 
 ## Compute Infrastructure
 
