@@ -149,7 +149,7 @@ This work uses the ArabicaQA dataset:
 
 ## System Overview
 
-![RAG pipeline overview](rag_pipeline_figure.jpg)
+![RAG pipeline overview](rag_pipeline_figure_detailed.jpg)
 
 ```text
 Question
